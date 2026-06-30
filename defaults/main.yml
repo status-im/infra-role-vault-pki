@@ -37,8 +37,7 @@ cert_info: '{{ cert_role_info }}'
 cert_ca_issuer_name:
 cert_ca_ttl: '1825d'
 
-  ## Option for simple certificate
-cert_common_name:
+## Option for simple certificate
 cert_ip_sans:
 cert_domain_sans:
 
