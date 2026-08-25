@@ -1,4 +1,0 @@
----
-collections:
-  - name: hashicorp.vault
-  - name: community.crypto

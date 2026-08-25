@@ -1,77 +1,77 @@
 ---
 - name: 'Vault PKI | List existing keys'
   delegate_to: localhost
-  register: cert_pki_keys
+  register: vault_pki_pki_keys
   community.hashi_vault.vault_list:
     path: 'pki/keys'
 
 - name: 'Vault PKI | Generate a new CA'
   run_once: true
   when: >
-    cert_ca_key_name not in
-    (cert_pki_keys.data.data.key_info | dict2items | map(attribute='value.key_name'))
+    vault_pki_ca_key_name not in
+    (vault_pki_pki_keys.data.data.key_info | dict2items | map(attribute='value.key_name'))
   block:
     - name: 'Vault PKI | Generating CSR for Application CA'
       delegate_to: localhost
-      register: cert_ca_csr_write
+      register: vault_pki_ca_csr_write
       community.hashi_vault.vault_write:
-        path: 'pki/intermediate/generate/{{ cert_ca_type }}'
+        path: 'pki/intermediate/generate/{{ vault_pki_ca_type }}'
         data:
-          common_name:  '{{ cert_ca_common_name | mandatory }}'
-          key_name:     '{{ cert_ca_key_name    | mandatory }}'
-          key_type:     '{{ cert_ca_key_type    | mandatory }}'
-          organization: '{{ (cert_ca_info | default(cert_info, true)).organization }}'
-          ou:           '{{ (cert_ca_info | default(cert_info, true)).unit }}'
-          country:      '{{ (cert_ca_info | default(cert_info, true)).country }}'
-          ttl:          '{{ cert_ca_ttl }}'
+          common_name:  '{{ vault_pki_ca_common_name       | mandatory }}'
+          key_name:     '{{ vault_pki_ca_key_name          | mandatory }}'
+          key_type:     '{{ vault_pki_ca_key_type          | mandatory }}'
+          organization: '{{ vault_pki_ca_info.organization | mandatory}}'
+          ou:           '{{ vault_pki_ca_info.unit         | mandatory}}'
+          country:      '{{ vault_pki_ca_info.country      | mandatory}}'
+          ttl:          '{{ vault_pki_ca_ttl }}'
 
     - name: 'Vault PKI | Signing the certificate'
       delegate_to: localhost
-      register: cert_ca_signing_resp
+      register: vault_pki_ca_signing_resp
       community.hashi_vault.vault_write:
         path: 'pki/root/sign-intermediate'
         data:
-          common_name:  '{{ cert_ca_common_name | mandatory }}'
-          organization: '{{ (cert_ca_info | default(cert_info, true)).organization }}'
-          ou:           '{{ (cert_ca_info | default(cert_info, true)).unit }}'
-          country:      '{{ (cert_ca_info | default(cert_info, true)).country }}'
-          ttl:          '{{ cert_ca_ttl }}'
-          csr:          '{{ cert_ca_csr_write.data.data.csr }}'
+          common_name:  '{{ vault_pki_ca_common_name       | mandatory }}'
+          organization: '{{ vault_pki_ca_info.organization | mandatory }}'
+          ou:           '{{ vault_pki_ca_info.unit         | mandatory }}'
+          country:      '{{ vault_pki_ca_info.country      | mandatory }}'
+          ttl:          '{{ vault_pki_ca_ttl }}'
+          csr:          '{{ vault_pki_ca_csr_write.data.data.csr }}'
 
     - name: 'Vault PKI | Install Signed Intermediate CA'
       delegate_to: localhost
-      register: ca_cert_import_resp
+      register: vault_pki_ca_import_resp
       community.hashi_vault.vault_write:
         path: 'pki/intermediate/set-signed'
         data:
-          certificate: "{{ cert_ca_signing_resp.data.data.certificate }}"
+          certificate: "{{ vault_pki_ca_signing_resp.data.data.certificate }}"
 
     - name: 'Vault PKI | Set name of intermediate issuer'
       delegate_to: localhost
       community.hashi_vault.vault_write:
-        path: "pki/issuer/{{ ca_cert_import_resp.data.data.imported_issuers[0] }}"
+        path: "pki/issuer/{{ vault_pki_ca_import_resp.data.data.imported_issuers[0] }}"
         data:
-          issuer_name:  '{{ cert_ca_issuer_name | mandatory }}'
+          issuer_name:  '{{ vault_pki_ca_issuer_name | mandatory }}'
 
 - name: 'Vault PKI | Read intermediate CA PEM'
   delegate_to: localhost
-  register: cert_ca_key_read
+  register: vault_pki_ca_key_read
   ignore_errors: true
   community.hashi_vault.vault_read:
-    path: 'pki/issuer/{{ cert_ca_issuer_name | mandatory }}'
+    path: 'pki/issuer/{{ vault_pki_ca_issuer_name | mandatory }}'
 
 - name: 'Vault PKI | Create certificates directory'
   ansible.builtin.file:
-    dest:  '{{ cert_ca_pem_path | dirname }}'
-    owner: '{{ cert_user }}'
-    group: '{{ cert_group }}'
+    dest:  '{{ vault_pki_ca_pem_path | dirname }}'
+    owner: '{{ vault_pki_user }}'
+    group: '{{ vault_pki_group }}'
     state: 'directory'
     mode:  '0o755'
 
 - name: 'Vault PKI | Write CA certificate PEM'
   ansible.builtin.copy:
-    content: '{{ cert_ca_key_read.data.data.certificate | mandatory }}'
-    dest:    '{{ cert_ca_pem_path | mandatory }}'
-    owner:   '{{ cert_user }}'
-    group:   '{{ cert_group }}'
-    mode:    '{{ cert_pem_mode }}'
+    content: '{{ vault_pki_ca_key_read.data.data.certificate | mandatory }}'
+    dest:    '{{ vault_pki_ca_pem_path | mandatory }}'
+    owner:   '{{ vault_pki_user }}'
+    group:   '{{ vault_pki_group }}'
+    mode:    '{{ vault_pki_pem_mode }}'

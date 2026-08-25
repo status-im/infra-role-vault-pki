@@ -1,52 +1,52 @@
 ---
 - name: 'Vault PKI | Check Local certificate files'
-  register: cert_local_files_raw
+  register: vault_pki_local_files_raw
   ansible.builtin.stat:
     path: '{{ item }}'
   with_items:
-    - '{{ cert_pem_path }}'
-    - '{{ cert_key_path }}'
-    - '{{ cert_ca_pem_path }}'
+    - '{{ vault_pki_pem_path }}'
+    - '{{ vault_pki_key_path }}'
+    - '{{ vault_pki_ca_pem_path }}'
 
 - name: 'Vault PKI | Index stat results by path'
   set_fact:
-    cert_local_files: >-
+    vault_pki_local_files: >-
       {{ dict(
-           cert_local_files_raw.results
+           vault_pki_local_files_raw.results
            | map(attribute='item')
-           | zip(cert_local_files_raw.results | map(attribute='stat'))
+           | zip(vault_pki_local_files_raw.results | map(attribute='stat'))
       ) }}
 
 - name: 'Vault PKI | Check CA expiration'
-  when: cert_local_files[cert_ca_pem_path].exists
-  register: cert_ca_x509_info
+  when: vault_pki_local_files[vault_pki_ca_pem_path].exists
+  register: vault_pki_ca_x509_info
   failed_when: false
   community.crypto.x509_certificate_info:
-    path: '{{ cert_pem_path | mandatory }}'
+    path: '{{ vault_pki_pem_path | mandatory }}'
     valid_at:
-      renewal_window: '{{ cert_renew_before }}'
+      renewal_window: '{{ vault_pki_renew_before }}'
 
 - name: 'Vault PKI | Check certificate expiration'
-  when: cert_local_files[cert_pem_path].exists
-  register: cert_leaf_x509_info
+  when: vault_pki_local_files[vault_pki_pem_path].exists
+  register: vault_pki_leaf_x509_info
   failed_when: false
   community.crypto.x509_certificate_info:
-    path: '{{ cert_pem_path | mandatory }}'
+    path: '{{ vault_pki_pem_path | mandatory }}'
     valid_at:
-      renewal_window: '{{ cert_renew_before }}'
+      renewal_window: '{{ vault_pki_renew_before }}'
 
 - name: 'Vault PKI | Decide if certificate generation is needed'
   set_fact:
-    cert_ca_generation_needed: |
+    vault_pki_ca_generation_needed: |
       {{
-        cert_ca_x509_info.failed | default(false)
-        or not cert_local_files[cert_ca_pem_path].exists
-        or not (cert_ca_x509_info.valid_at.renewal_window | default(false))
+        vault_pki_ca_x509_info.failed | default(false)
+        or not vault_pki_local_files[vault_pki_ca_pem_path].exists
+        or not (vault_pki_ca_x509_info.valid_at.renewal_window | default(false))
       }}
-    cert_leaf_generation_needed: |
+    vault_pki_leaf_generation_needed: |
       {{
-        cert_leaf_x509_info.failed | default(false)
-        or not cert_local_files[cert_pem_path].exists
-        or not cert_local_files[cert_key_path].exists
-        or not (cert_leaf_x509_info.valid_at.renewal_window | default(false))
+        vault_pki_leaf_x509_info.failed | default(false)
+        or not vault_pki_local_files[vault_pki_pem_path].exists
+        or not vault_pki_local_files[vault_pki_key_path].exists
+        or not (vault_pki_leaf_x509_info.valid_at.renewal_window | default(false))
       }}

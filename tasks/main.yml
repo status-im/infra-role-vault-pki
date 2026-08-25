@@ -3,15 +3,15 @@
   tags: ['role::vault-cert', 'role::vault-cert:checks']
 
 - import_tasks: 'check-certs.yml'
-  tags: ['role::vault-cert', 'role::vault-cert:check', 'role::vault-cert:ca']
+  tags: ['role::vault-cert', 'role::vault-cert:checks']
 
 - import_tasks: 'generate-ca.yml'
   tags: ['role::vault-cert', 'role::vault-cert:gen-ca']
   module_defaults:
-    group/community.hashi_vault.vault: '{{ cert_vault_module_defaults }}'
+    group/community.hashi_vault.vault: '{{ vault_pki_vault_module_defaults }}'
 
 - import_tasks: 'generate-cert.yml'
   tags: ['role::vault-cert', 'role::vault-cert:gen-cert']
-  when: cert_leaf_generation_needed
+  when: vault_pki_leaf_generation_needed
   module_defaults:
-    group/community.hashi_vault.vault: '{{ cert_vault_module_defaults }}'
+    group/community.hashi_vault.vault: '{{ vault_pki_vault_module_defaults }}'

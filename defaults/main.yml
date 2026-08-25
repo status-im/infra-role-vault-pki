@@ -1,50 +1,50 @@
 ---
 ## Common Options
-cert_common_name: 'example.org'
-cert_issuer_name: '{{ cert_common_name }} Issuer'
-cert_store_path: '/certs'
-cert_pem_path: '{{ cert_store_path }}/{{ cert_common_name }}.pem'
-cert_key_path: '{{ cert_store_path }}/{{ cert_common_name }}.key'
-cert_renew_before: '+30d'
+vault_pki_common_name: 'example.org'
+vault_pki_issuer_name: '{{ vault_pki_common_name }} Issuer'
+vault_pki_store_path: '/certs'
+vault_pki_pem_path: '{{ vault_pki_store_path }}/{{ vault_pki_common_name }}.pem'
+vault_pki_key_path: '{{ vault_pki_store_path }}/{{ vault_pki_common_name }}.key'
+vault_pki_renew_before: '+30d'
 
 ## Info
-cert_info:
+vault_pki_info:
   organization: 'IFT Studio Pte Ltd'
   unit:         'Infra'
   country:      'SG'
 
 ## SANS
-cert_ip_sans: []
-cert_domain_sans: []
+vault_pki_ip_sans: []
+vault_pki_domain_sans: []
 
 ## Certificate Authority
-cert_ca_common_name: '{{ cert_common_name }} CA'
-cert_ca_key_name:    '{{ cert_ca_common_name | lower | replace(" ", "-") }}-ca'
-cert_ca_pem_path:    '{{ cert_store_path }}/{{ cert_ca_key_name }}-ca.pem'
-cert_ca_info:        '{{ cert_info }}'
-cert_ca_issuer_name: '{{ cert_ca_key_name | lower | replace(" ", "-") }}'
-cert_ca_key_type: 'rsa' # ec, ed25519
-cert_ca_ttl: '1825d'
-cert_ca_type: 'internal' # 'exported'
+vault_pki_ca_common_name: '{{ vault_pki_common_name }} CA'
+vault_pki_ca_key_name:    '{{ vault_pki_ca_common_name | lower | replace(" ", "-") }}'
+vault_pki_ca_pem_path:    '{{ vault_pki_store_path }}/{{ vault_pki_ca_key_name }}.pem'
+vault_pki_ca_info:        '{{ vault_pki_info }}'
+vault_pki_ca_issuer_name: '{{ vault_pki_ca_key_name | lower | replace(" ", "-") }}'
+vault_pki_ca_key_type: 'rsa' # ec, ed25519
+vault_pki_ca_ttl: '1825d'
+vault_pki_ca_type: 'internal' # 'exported'
 
 ## PKI Role
-cert_role_name:              '{{ cert_common_name | lower | replace(" ", "-") }}-role'
-cert_role_info:              '{{ cert_info }}'
-cert_role_issuer_name:       '{{ cert_ca_issuer_name }}'
-cert_role_allow_domains:     '{{ [cert_common_name] + cert_ip_sans + cert_domain_sans }}'
-cert_role_allow_bare_domain: true
-cert_role_allow_subdomains:  true
-cert_role_allow_any_name:    true
-cert_role_max_ttl:           '365d'
+vault_pki_role_name:              '{{ vault_pki_common_name | lower | replace(" ", "-") }}-role'
+vault_pki_role_info:              '{{ vault_pki_info }}'
+vault_pki_role_issuer_name:       '{{ vault_pki_ca_issuer_name }}'
+vault_pki_role_allow_domains:     '{{ [vault_pki_common_name] + vault_pki_ip_sans + vault_pki_domain_sans }}'
+vault_pki_role_allow_bare_domain: true
+vault_pki_role_allow_subdomains:  true
+vault_pki_role_allow_any_name:    true
+vault_pki_role_max_ttl:           '365d'
 
 ## Permissions
-cert_user: 'root'
-cert_group: 'root'
-cert_pem_mode: '0644'
-cert_key_mode: '0600'
+vault_pki_user: 'root'
+vault_pki_group: 'root'
+vault_pki_pem_mode: '0644'
+vault_pki_key_mode: '0600'
 
 ## Auth
-cert_vault_module_defaults:
+vault_pki_vault_module_defaults:
   url:                   '{{ lookup("ansible.builtin.env", "VAULT_ADDR") }}'
   token:                 '{{ lookup("ansible.builtin.env", "VAULT_TOKEN") }}'
   ca_cert:               '{{ lookup("ansible.builtin.env", "VAULT_CACERT") }}'
