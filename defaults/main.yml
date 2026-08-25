@@ -1,42 +1,52 @@
 ---
-vault_addr:             '{{ lookup("ansible.builtin.env", "VAULT_ADDR") }}'
-vault_token:            '{{ lookup("ansible.builtin.env", "VAULT_TOKEN") }}'
-vault_pki_engine:       'pki'
-cert_vault_ca_path:          '/certs/vault-ca.crt'
-
-cert_generate_ca: false
+## Common Options
+cert_common_name: 'example.org'
+cert_issuer_name: '{{ cert_common_name }} Issuer'
+cert_store_path: '/certs'
+cert_pem_path: '{{ cert_store_path }}/{{ cert_common_name }}.pem'
+cert_key_path: '{{ cert_store_path }}/{{ cert_common_name }}.key'
 cert_renew_before: '+30d'
-certificate: ''
-private_key: ''
 
-## Option for role:
-cert_role:
-cert_role_issuer_name:
-cert_role_info:
-  organization:               'IFT Studio Pte Ltd'
-  unit:                       'Infra'
-  country:                    'SG'
-cert_role_allow_domains:      ['{{ cert_common_name }}']
-cert_role_allow_bare_domain:  True
-cert_role_allow_subdomains:   True
-cert_role_allow_any_name:     True
-cert_role_max_ttl:            '365d'
+## Info
+cert_info:
+  organization: 'IFT Studio Pte Ltd'
+  unit:         'Infra'
+  country:      'SG'
 
-## Commun option:
-cert_certificate_path: # '/certs/application.crt'
-cert_private_key_path: # '/certs/application.key'
-cert_common_name:
-cert_info: '{{ cert_role_info }}'
+## SANS
+cert_ip_sans: []
+cert_domain_sans: []
 
-## Option for CA
-cert_ca_issuer_name:
+## Certificate Authority
+cert_ca_common_name: '{{ cert_common_name }} CA'
+cert_ca_key_name:    '{{ cert_ca_common_name | lower | replace(" ", "-") }}-ca'
+cert_ca_pem_path:    '{{ cert_store_path }}/{{ cert_ca_key_name }}-ca.pem'
+cert_ca_info:        '{{ cert_info }}'
+cert_ca_issuer_name: '{{ cert_ca_key_name | lower | replace(" ", "-") }}'
+cert_ca_key_type: 'rsa' # ec, ed25519
 cert_ca_ttl: '1825d'
+cert_ca_type: 'internal' # 'exported'
 
-## Option for simple certificate
-cert_ip_sans:
-cert_domain_sans:
+## PKI Role
+cert_role_name:              '{{ cert_common_name | lower | replace(" ", "-") }}-role'
+cert_role_info:              '{{ cert_info }}'
+cert_role_issuer_name:       '{{ cert_ca_issuer_name }}'
+cert_role_allow_domains:     '{{ [cert_common_name] + cert_ip_sans + cert_domain_sans }}'
+cert_role_allow_bare_domain: true
+cert_role_allow_subdomains:  true
+cert_role_allow_any_name:    true
+cert_role_max_ttl:           '365d'
 
+## Permissions
 cert_user: 'root'
 cert_group: 'root'
-cert_certificate_mode: '0644'
-cert_private_key_mode: '0600'
+cert_pem_mode: '0644'
+cert_key_mode: '0600'
+
+## Auth
+cert_vault_module_defaults:
+  url:                   '{{ lookup("ansible.builtin.env", "VAULT_ADDR") }}'
+  token:                 '{{ lookup("ansible.builtin.env", "VAULT_TOKEN") }}'
+  ca_cert:               '{{ lookup("ansible.builtin.env", "VAULT_CACERT") }}'
+  cert_auth_public_key:  '{{ lookup("ansible.builtin.env", "VAULT_CLIENT_CERT") }}'
+  cert_auth_private_key: '{{ lookup("ansible.builtin.env", "VAULT_CLIENT_KEY") }}'

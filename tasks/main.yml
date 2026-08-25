@@ -1,15 +1,17 @@
 ---
-- import_tasks: 'check-local-cert.yml'
-  tags: ['role::vault-cert', 'role::vault-cert:check']
-- import_tasks: 'create-role.yml'
-  tags: ['role::vault-cert', 'role::vault-cert:role']
-  when: not cert_generate_ca and cert_needs_generation
-- import_tasks: 'generate-cert.yml'
-  tags: ['role::vault-cert', 'role::vault-cert:gen-cert']
-  when: not cert_generate_ca and cert_needs_generation
+- import_tasks: 'check-vars.yml'
+  tags: ['role::vault-cert', 'role::vault-cert:checks']
+
+- import_tasks: 'check-certs.yml'
+  tags: ['role::vault-cert', 'role::vault-cert:check', 'role::vault-cert:ca']
+
 - import_tasks: 'generate-ca.yml'
   tags: ['role::vault-cert', 'role::vault-cert:gen-ca']
-  when: cert_generate_ca and cert_needs_generation
-- import_tasks: 'write-cert.yml'
-  tags: ['role::vault-cert', 'role::vault-cert:write']
-  when: cert_needs_generation
+  module_defaults:
+    group/community.hashi_vault.vault: '{{ cert_vault_module_defaults }}'
+
+- import_tasks: 'generate-cert.yml'
+  tags: ['role::vault-cert', 'role::vault-cert:gen-cert']
+  when: cert_leaf_generation_needed
+  module_defaults:
+    group/community.hashi_vault.vault: '{{ cert_vault_module_defaults }}'

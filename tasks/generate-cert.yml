@@ -1,18 +1,42 @@
 ---
-- name: 'Vault PKI | Generating certificate'
-  hashicorp.vault.vault_pki_generate_certificate:
-    url: '{{ vault_addr }}'
-    token: '{{ vault_token }}'
-    ca_cert: '{{ cert_vault_ca_path }}'
-    engine_mount_point: '{{ vault_pki_engine }}'
-    role_name: '{{ cert_role | mandatory }}'
-    common_name: '{{ cert_common_name | mandatory }}'
-    ip_sans: '{{ cert_ip_sans if cert_ip_sans is sequence and cert_ip_sans is not string else ([cert_ip_sans] if cert_ip_sans else []) }}'
-    alt_names: '{{ cert_domain_sans if cert_domain_sans is sequence and cert_domain_sans is not string else ([cert_domain_sans] if cert_domain_sans else []) }}'
-  register: new_certificate
-  no_log: true
+- name: 'Vault PKI | Create or update role'
+  delegate_to: localhost
+  community.hashi_vault.vault_write:
+    path: 'pki/roles/{{ cert_role_name | mandatory }}'
+    data:
+      issuer_ref:         '{{ cert_role_issuer_name       | mandatory }}'
+      organization:       '{{ cert_role_info.organization | mandatory }}'
+      ou:                 '{{ cert_role_info.unit         | mandatory }}'
+      country:            '{{ cert_role_info.country      | mandatory }}'
+      max_ttl:            '{{ cert_role_max_ttl           | mandatory }}'
+      allowed_domains:    '{{ cert_role_allow_domains     | mandatory }}'
+      allow_subdomains:   '{{ cert_role_allow_subdomains }}'
+      allow_bare_domains: '{{ cert_role_allow_bare_domain }}'
+      allow_any_name:     '{{ cert_role_allow_any_name }}'
 
-- set_fact:
-    certificate: '{{ new_certificate.data.data.certificate }}'
-    private_key: '{{ new_certificate.data.data.private_key }}'
+- name: 'Vault PKI | Generate certificate'
+  delegate_to: localhost
+  register: cert_new_raw
   no_log: true
+  community.hashi_vault.vault_pki_generate_certificate:
+    common_name: '{{ cert_common_name | mandatory }}'
+    role_name:   '{{ cert_role_name   | mandatory }}'
+    ip_sans:     '{{ cert_ip_sans     | default([]) }}'
+    alt_names:   '{{ cert_domain_sans | default([]) }}'
+
+- name: 'Vault PKI | Write certificate PEM'
+  ansible.builtin.copy:
+    content: '{{ cert_new_raw.data.data.certificate | mandatory }}'
+    dest:    '{{ cert_pem_path | mandatory }}'
+    owner:   '{{ cert_user }}'
+    group:   '{{ cert_group }}'
+    mode:    '{{ cert_pem_mode }}'
+
+- name: 'Vault PKI | Write certificate key'
+  no_log: true
+  ansible.builtin.copy:
+    content: '{{ cert_new_raw.data.data.private_key | mandatory }}'
+    dest:    '{{ cert_key_path | mandatory }}'
+    owner:   '{{ cert_user }}'
+    group:   '{{ cert_group }}'
+    mode:    '{{ cert_key_mode }}'

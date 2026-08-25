@@ -1,0 +1,7 @@
+---
+- name: 'Vault PKI | Verif variable types and values'
+  assert:
+    that:
+      - cert_ip_sans     | type_debug == 'list'
+      - cert_domain_sans | type_debug == 'list'
+      - cert_ca_type in ['internal', 'exported']
