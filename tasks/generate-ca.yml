@@ -1,61 +1,47 @@
 ---
 - name: 'Vault PKI | Generating CSR for Application CA'
-  uri:
-    url: '{{ vault_addr }}/v1/{{ vault_pki_engine }}/intermediate/generate/exported'
-    method: 'POST'
-    return_content: yes
-    headers: '{{ certs_vault_headers }}'
-    body:
-      common_name:  '{{ cert_common_name | mandatory }}'
-      issuer_name:  '{{ cert_ca_issuer_name | mandatory }}'
-      key_name:     '{{ cert_ca_issuer_name | mandatory }}'
+  hashicorp.vault.vault_write:
+    url: '{{ vault_addr }}'
+    token: '{{ vault_token }}'
+    ca_cert: '{{ cert_vault_ca_path }}'
+    path: '{{ vault_pki_engine }}/intermediate/generate/exported'
+    data:
+      common_name: '{{ cert_common_name | mandatory }}'
+      issuer_name: '{{ cert_ca_issuer_name | mandatory }}'
+      key_name: '{{ cert_ca_issuer_name | mandatory }}'
       organization: '{{ cert_info.organization }}'
-      ou:           '{{ cert_info.unit }}'
+      ou: '{{ cert_info.unit }}'
       country: '{{ cert_info.country }}'
       ttl: '{{ cert_ca_ttl }}'
-    body_format: 'json'
-    ca_path: '{{ cert_vault_ca_path }}'
-    client_cert: '{{ cert_vault_client_cert_path }}'
-    client_key: '{{ cert_vault_client_key_path }}'
   register: response_csr
+  no_log: true
 
 - name: 'Vault PKI | Signing the certificate'
-  uri:
-    url: '{{ vault_addr }}/v1/pki/root/sign-intermediate'
-    method:  'POST'
-    return_content: yes
-    headers: '{{ certs_vault_headers }}'
-    body:
-        common_name: '{{ cert_common_name | mandatory }}'
-        organization: '{{ cert_info.organization }}'
-        ou: '{{ cert_info.unit }}'
-        country: '{{ cert_info.country }}'
-        ttl: '{{ cert_ca_ttl }}'
-        csr: '{{ response_csr.json.data.csr }}'
-    body_format: 'json'
-    ca_path: '{{ cert_vault_ca_path }}'
-    client_cert: '{{ cert_vault_client_cert_path }}'
-    client_key: '{{ cert_vault_client_key_path }}'
+  hashicorp.vault.vault_write:
+    url: '{{ vault_addr }}'
+    token: '{{ vault_token }}'
+    ca_cert: '{{ cert_vault_ca_path }}'
+    path: 'pki/root/sign-intermediate'
+    data:
+      common_name: '{{ cert_common_name | mandatory }}'
+      organization: '{{ cert_info.organization }}'
+      ou: '{{ cert_info.unit }}'
+      country: '{{ cert_info.country }}'
+      ttl: '{{ cert_ca_ttl }}'
+      csr: '{{ response_csr.data.data.csr }}'
   register: response_signing
-
-- name: 'Debug'
-  debug:
-    msg: '{{ response_signing.json }}'
+  no_log: true
 
 - name: 'Vault PKI | Loading the Application CA'
-  uri:
-    url: '{{ vault_addr }}/v1/{{ vault_pki_engine }}/intermediate/set-signed'
-    method:  'POST'
-    return_content: yes
-    headers: '{{ certs_vault_headers }}'
-    body:
-      certificate: '{{ response_signing.json.data.certificate }}'
-    body_format: 'json'
-    ca_path: '{{ cert_vault_ca_path }}'
-    client_cert: '{{ cert_vault_client_cert_path }}'
-    client_key: '{{ cert_vault_client_key_path }}'
+  hashicorp.vault.vault_write:
+    url: '{{ vault_addr }}'
+    token: '{{ vault_token }}'
+    ca_cert: '{{ cert_vault_ca_path }}'
+    path: '{{ vault_pki_engine }}/intermediate/set-signed'
+    data:
+      certificate: '{{ response_signing.data.data.certificate }}'
 
 - set_fact:
-    certificate: '{{ response_signing.json.data.certificate }}'
-    private_key: '{{ response_csr.json.data.private_key }}'
+    certificate: '{{ response_signing.data.data.certificate }}'
+    private_key: '{{ response_csr.data.data.private_key }}'
   no_log: true

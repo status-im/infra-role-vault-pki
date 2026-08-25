@@ -1,35 +1,17 @@
 ---
-- name: 'Vault PKI | Fetch list of roles'
-  uri:
-    url: '{{ vault_addr }}/v1/{{ vault_pki_engine }}/roles'
-    method:  'LIST'
-    return_content: yes
-    headers: '{{ certs_vault_headers }}'
-    ca_path: '{{ cert_vault_ca_path }}'
-    client_cert: '{{ cert_vault_client_cert_path }}'
-    client_key: '{{ cert_vault_client_key_path }}'
-  register: 'roles'
-
 - name: 'Vault PKI | Create role'
-  uri:
-    url: '{{ vault_addr }}/v1/{{ vault_pki_engine }}/roles/{{ cert_role }}'
-    method: 'POST'
-    return_content: yes
-    headers: '{{ certs_vault_headers }}'
-    body:
-      issuer_ref:         '{{ cert_role_issuer_name | mandatory }}'
-      organization:       '{{ cert_role_info.organization | mandatory }}'
-      ou:                 '{{ cert_role_info.unit | mandatory }}'
-      country:            '{{ cert_role_info.country | mandatory }}'
-      allowed_domains:    '{{ cert_role_allow_domains | mandatory }}'
-      allow_subdomains:   '{{ cert_role_allow_subdomains }}'
+  hashicorp.vault.vault_write:
+    url: '{{ vault_addr }}'
+    token: '{{ vault_token }}'
+    ca_cert: '{{ cert_vault_ca_path }}'
+    path: '{{ vault_pki_engine }}/roles/{{ cert_role | mandatory }}'
+    data:
+      issuer_ref: '{{ cert_role_issuer_name | mandatory }}'
+      organization: '{{ cert_role_info.organization | mandatory }}'
+      ou: '{{ cert_role_info.unit | mandatory }}'
+      country: '{{ cert_role_info.country | mandatory }}'
+      allowed_domains: '{{ cert_role_allow_domains | mandatory }}'
+      allow_subdomains: '{{ cert_role_allow_subdomains }}'
       allow_bare_domains: '{{ cert_role_allow_bare_domain }}'
-      allow_any_name:     '{{ cert_role_allow_any_name }}'
-      max_ttl:            '{{ cert_role_max_ttl | mandatory }}'
-    body_format: 'json'
-    ca_path: '{{ cert_vault_ca_path }}'
-    client_cert: '{{ cert_vault_client_cert_path }}'
-    client_key: '{{ cert_vault_client_key_path }}'
-  when: cert_role not in item.value
-  with_dict: '{{ roles.json.data }}'
-  # Ansible dont want to access the `keys` values otherwise
+      allow_any_name: '{{ cert_role_allow_any_name }}'
+      max_ttl: '{{ cert_role_max_ttl | mandatory }}'

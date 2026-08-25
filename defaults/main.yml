@@ -1,17 +1,9 @@
 ---
 vault_addr:             '{{ lookup("ansible.builtin.env", "VAULT_ADDR") }}'
+vault_token:            '{{ lookup("ansible.builtin.env", "VAULT_TOKEN") }}'
 vault_pki_engine:       'pki'
+cert_vault_kv_engine:   'secret'
 cert_vault_ca_path:          '/certs/vault-ca.crt'
-cert_vault_client_cert_path: '/certs/vault-client.crt'
-cert_vault_client_key_path:  '/certs/vault-client.key'
-
-certs_vault_headers:
-  X-Vault-Token: '{{ lookup("ansible.builtin.env", "VAULT_TOKEN")}}'
-  Content-Type: 'application/json'
-
-certs_vault_headers_patch:
-  X-Vault-Token: '{{ lookup("ansible.builtin.env", "VAULT_TOKEN")}}'
-  Content-Type: 'application/merge-patch+json'
 
 ## Option for role:
 cert_role:

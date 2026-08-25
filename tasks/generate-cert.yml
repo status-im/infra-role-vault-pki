@@ -1,21 +1,18 @@
 ---
 - name: 'Vault PKI | Generating certificate'
-  uri:
-    url: '{{ vault_addr }}/v1/{{ vault_pki_engine }}/issue/{{ cert_role | mandatory }}'
-    method:  'POST'
-    return_content: yes
-    headers: '{{ certs_vault_headers }}'
-    body:
-      common_name:  '{{ cert_common_name | mandatory }}'
-      ip_sans:      '{{ cert_ip_sans | mandatory }}'
-      alt_names:    '{{ cert_domain_sans | mandatory }}'
-    body_format:    'json'
-    ca_path:      '{{ cert_vault_ca_path }}'
-    client_cert:  '{{ cert_vault_client_cert_path }}'
-    client_key:   '{{ cert_vault_client_key_path }}'
+  hashicorp.vault.vault_pki_generate_certificate:
+    url: '{{ vault_addr }}'
+    token: '{{ vault_token }}'
+    ca_cert: '{{ cert_vault_ca_path }}'
+    engine_mount_point: '{{ vault_pki_engine }}'
+    role_name: '{{ cert_role | mandatory }}'
+    common_name: '{{ cert_common_name | mandatory }}'
+    ip_sans: '{{ cert_ip_sans if cert_ip_sans is sequence and cert_ip_sans is not string else ([cert_ip_sans] if cert_ip_sans else []) }}'
+    alt_names: '{{ cert_domain_sans if cert_domain_sans is sequence and cert_domain_sans is not string else ([cert_domain_sans] if cert_domain_sans else []) }}'
   register: new_certificate
+  no_log: true
 
 - set_fact:
-      certificate: '{{ new_certificate.json.data.certificate }}'
-      private_key: '{{ new_certificate.json.data.private_key }}'
+    certificate: '{{ new_certificate.data.data.certificate }}'
+    private_key: '{{ new_certificate.data.data.private_key }}'
   no_log: true

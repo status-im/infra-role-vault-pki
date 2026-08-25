@@ -1,33 +1,13 @@
 ---
 - name: 'Vault PKI | Save the certificate and the private key in Vault'
-  uri:
-    url:         '{{ vault_addr }}/v1/secret/data/{{ cert_vault_storing_path | mandatory }}'
-    method:      'POST'
-    headers:     '{{ certs_vault_headers }}'
-    body:
-      data:
-        certificate: '{{ certificate }}'
-        private_key: '{{ private_key }}'
-        expiration_date: '{{ ansible_date_time.epoch }}'
-    body_format: 'json'
-    ca_path:     '{{ cert_vault_ca_path }}'
-    client_cert: '{{ cert_vault_client_cert_path }}'
-    client_key:  '{{ cert_vault_client_key_path }}'
-  when: not cert_existing
-
-- name: 'Vault PKI | Save the certificate and the private key in Vault'
-  uri:
-    url:         '{{ vault_addr }}/v1/secret/data/{{ cert_vault_storing_path | mandatory }}'
-    method:      'PATCH'
-    headers:     '{{ certs_vault_headers_patch }}'
-    body:
-      data:
-        certificate: '{{ certificate }}'
-        private_key: '{{ private_key }}'
-        expiration_date: '{{ ansible_date_time.epoch }}'
-    body_format: 'json'
-    ca_path:     '{{ cert_vault_ca_path }}'
-    client_cert: '{{ cert_vault_client_cert_path }}'
-    client_key:  '{{ cert_vault_client_key_path }}'
-  when: cert_existing and expired
-
+  hashicorp.vault.vault_kv2_write:
+    url: '{{ vault_addr }}'
+    token: '{{ vault_token }}'
+    ca_cert: '{{ cert_vault_ca_path }}'
+    engine_mount_point: '{{ cert_vault_kv_engine }}'
+    path: '{{ cert_vault_storing_path | mandatory | regex_replace("^/+", "") }}'
+    data:
+      certificate: '{{ certificate }}'
+      private_key: '{{ private_key }}'
+      expiration_date: '{{ ansible_date_time.epoch }}'
+  no_log: true
