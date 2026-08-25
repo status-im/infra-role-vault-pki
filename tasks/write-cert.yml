@@ -1,17 +1,19 @@
 ---
 - name: 'Vault PKI | Write the certificate'
-  copy:
+  ansible.builtin.copy:
     content: '{{ certificate }}'
     dest: '{{ cert_certificate_path }}'
     owner: '{{ cert_user }}'
     group: '{{ cert_group }}'
+    mode: '{{ cert_certificate_mode }}'
   when: certificate | length > 0
 
 - name: 'Vault PKI | Write the private_key'
-  copy:
+  ansible.builtin.copy:
     content: '{{ private_key }}'
     dest: '{{ cert_private_key_path }}'
     owner: '{{ cert_user }}'
     group: '{{ cert_group }}'
-  when: (private_key | length > 0) and not cert_generate_ca
+    mode: '{{ cert_private_key_mode }}'
+  when: private_key | length > 0
   no_log: true

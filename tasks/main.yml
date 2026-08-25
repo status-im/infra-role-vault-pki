@@ -1,17 +1,15 @@
 ---
-- import_tasks: 'fetch-cert.yml'
-  tags: ['role::vault-cert', 'role::vault-cert:fetch']
+- import_tasks: 'check-local-cert.yml'
+  tags: ['role::vault-cert', 'role::vault-cert:check']
 - import_tasks: 'create-role.yml'
   tags: ['role::vault-cert', 'role::vault-cert:role']
-  when: not cert_generate_ca and not cert_existing
+  when: not cert_generate_ca and cert_needs_generation
 - import_tasks: 'generate-cert.yml'
   tags: ['role::vault-cert', 'role::vault-cert:gen-cert']
-  when: not cert_generate_ca and (not cert_existing or expired)
+  when: not cert_generate_ca and cert_needs_generation
 - import_tasks: 'generate-ca.yml'
   tags: ['role::vault-cert', 'role::vault-cert:gen-ca']
-  when: cert_generate_ca and (not cert_existing or expired)
-- import_tasks: 'save-cert.yml'
-  tags: ['role::vault-cert', 'role::vault-cert:gen-ca']
-  when: not cert_existing or expired
+  when: cert_generate_ca and cert_needs_generation
 - import_tasks: 'write-cert.yml'
-  tags: ['role::vault-cert', 'role::vault-cert:gen-ca']
+  tags: ['role::vault-cert', 'role::vault-cert:write']
+  when: cert_needs_generation
