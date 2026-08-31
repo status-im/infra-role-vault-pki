@@ -2,6 +2,7 @@
 - name: 'Vault PKI | Verif variable types and values'
   assert:
     that:
+      - vault_pki_common_name != 'example.org'
       - vault_pki_ip_sans     | type_debug == 'list'
       - vault_pki_domain_sans | type_debug == 'list'
       - vault_pki_ca_type in ['internal', 'exported']
