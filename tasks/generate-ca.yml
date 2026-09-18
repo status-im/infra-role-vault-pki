@@ -1,6 +1,7 @@
 ---
 - name: 'Vault PKI | List existing keys'
   delegate_to: localhost
+  become: false
   register: vault_pki_pki_keys
   community.hashi_vault.vault_list:
     path: 'pki/keys'
@@ -13,6 +14,7 @@
   block:
     - name: 'Vault PKI | Generating CSR for Application CA'
       delegate_to: localhost
+      become: false
       register: vault_pki_ca_csr_write
       community.hashi_vault.vault_write:
         path: 'pki/intermediate/generate/{{ vault_pki_ca_type }}'
@@ -27,6 +29,7 @@
 
     - name: 'Vault PKI | Signing the certificate'
       delegate_to: localhost
+      become: false
       register: vault_pki_ca_signing_resp
       community.hashi_vault.vault_write:
         path: 'pki/root/sign-intermediate'
@@ -40,6 +43,7 @@
 
     - name: 'Vault PKI | Install Signed Intermediate CA'
       delegate_to: localhost
+      become: false
       register: vault_pki_ca_import_resp
       community.hashi_vault.vault_write:
         path: 'pki/intermediate/set-signed'
@@ -48,6 +52,7 @@
 
     - name: 'Vault PKI | Set name of intermediate issuer'
       delegate_to: localhost
+      become: false
       community.hashi_vault.vault_write:
         path: "pki/issuer/{{ vault_pki_ca_import_resp.data.data.imported_issuers[0] }}"
         data:
@@ -55,6 +60,7 @@
 
 - name: 'Vault PKI | Read intermediate CA PEM'
   delegate_to: localhost
+  become: false
   register: vault_pki_ca_key_read
   ignore_errors: true
   community.hashi_vault.vault_read:
