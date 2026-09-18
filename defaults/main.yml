@@ -18,14 +18,15 @@ vault_pki_ip_sans: []
 vault_pki_domain_sans: []
 
 ## Certificate Authority
-vault_pki_ca_common_name: '{{ vault_pki_common_name }} CA'
-vault_pki_ca_key_name:    '{{ vault_pki_ca_common_name | lower | replace(" ", "-") }}'
-vault_pki_ca_pem_path:    '{{ vault_pki_store_path }}/{{ vault_pki_ca_key_name }}.pem'
-vault_pki_ca_info:        '{{ vault_pki_info }}'
-vault_pki_ca_issuer_name: '{{ vault_pki_ca_key_name | lower | replace(" ", "-") }}'
-vault_pki_ca_key_type: 'rsa' # ec, ed25519
-vault_pki_ca_ttl: '1825d'
-vault_pki_ca_type: 'internal' # 'exported'
+vault_pki_ca_common_name:         '{{ vault_pki_common_name }} CA'
+vault_pki_ca_key_name:            '{{ vault_pki_ca_common_name | lower | replace(" ", "-") }}'
+vault_pki_ca_pem_path:            '{{ vault_pki_store_path }}/{{ vault_pki_ca_key_name }}.pem'
+vault_pki_ca_full_chain_pem_path: '{{ vault_pki_store_path }}/full-chain-{{ vault_pki_ca_key_name }}.pem'
+vault_pki_ca_info:                '{{ vault_pki_info }}'
+vault_pki_ca_issuer_name:         '{{ vault_pki_ca_key_name | lower | replace(" ", "-") }}'
+vault_pki_ca_key_type:            'rsa' # ec, ed25519
+vault_pki_ca_ttl:                 '1825d'
+vault_pki_ca_type:                'internal' # 'exported'
 
 ## PKI Role
 vault_pki_role_name:              '{{ vault_pki_common_name | lower | replace(" ", "-") }}-role'
