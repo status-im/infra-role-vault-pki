@@ -75,3 +75,11 @@
     owner:   '{{ vault_pki_user }}'
     group:   '{{ vault_pki_group }}'
     mode:    '{{ vault_pki_pem_mode }}'
+
+- name: 'Vault PKI | Write full chain CA certificate PEM'
+  ansible.builtin.copy:
+    content: '{{ vault_pki_ca_key_read.data.data.ca_chain | join("") }}'
+    dest:    '{{vault_pki_ca_full_chain_pem_path | mandatory }}'
+    owner:   '{{ vault_pki_user }}'
+    group:   '{{ vault_pki_group }}'
+    mode:    '{{ vault_pki_pem_mode }}'
