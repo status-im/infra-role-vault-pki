@@ -1,6 +1,7 @@
 ---
 - name: 'Vault PKI | Create or update role'
   delegate_to: localhost
+  become: false
   community.hashi_vault.vault_write:
     path: 'pki/roles/{{ vault_pki_role_name | mandatory }}'
     data:
@@ -16,6 +17,7 @@
 
 - name: 'Vault PKI | Generate certificate'
   delegate_to: localhost
+  become: false
   register: vault_pki_new_raw
   no_log: true
   community.hashi_vault.vault_pki_generate_certificate:
